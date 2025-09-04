@@ -1,36 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PKG="cs8409-dkms"
-MODNAME="snd-hda-codec-cs8409"
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-KREL="$(uname -r)"
+REPO_SLUG="frogro/cs8409-dkms-wrapper"
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Wenn wir innerhalb des Repos (mit module/src) laufen → direkt das echte Installer-Script aufrufen
+if [[ -d "${SELF_DIR}/module/src" && -f "${SELF_DIR}/scripts/install.sh" ]]; then
+  exec "${SELF_DIR}/scripts/install.sh" "$@"
+fi
+
+# Andernfalls: Bootstrap – lade das Repo frisch herunter und führe dort aus
 need() { command -v "$1" >/dev/null 2>&1 || { echo "Fehlt: $1"; exit 2; }; }
+need curl
 
-need dkms
-need make
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
 
-if ! dpkg -s "linux-headers-${KREL}" >/dev/null 2>&1; then
-  echo "Installiere Kernel-Header für ${KREL}…"
-  sudo apt-get update -y
-  sudo apt-get install -y "linux-headers-${KREL}"
+echo "[*] Lade aktuelles Repo herunter …"
+curl -fsSL "https://codeload.github.com/${REPO_SLUG}/zip/refs/heads/main" -o "${TMP}/repo.zip"
+
+echo "[*] Entpacke …"
+unz() { command -v unzip >/dev/null 2>&1 && unzip -q "$@"; }
+if unz "${TMP}/repo.zip" -d "${TMP}"; then
+  :
+else
+  # Fallback ohne unzip: nutzt tar (GNU tar kann Zip lesen)
+  tar -xf "${TMP}/repo.zip" -C "${TMP}"
 fi
 
-VERSION="0.0.0"
-[[ -f "${ROOT}/VERSION" ]] && VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
-
-echo "[*] Registriere ${PKG}/${VERSION} bei DKMS aus ${ROOT}"
-# Sauberer Remove gleicher Version (falls vorher probiert)
-if dkms status | grep -q "^${PKG}/${VERSION}"; then
-  sudo dkms remove -m "${PKG}" -v "${VERSION}" --all || true
+# Der entpackte Ordner heißt <repo>-main
+SRC_DIR="$(find "${TMP}" -maxdepth 1 -type d -name '*cs8409-dkms-wrapper*' | head -n1)"
+if [[ -z "${SRC_DIR}" ]]; then
+  echo "Fehler: Entpacktes Repo nicht gefunden."
+  exit 1
 fi
 
-# Add/Build/Install
-sudo dkms add    -m "${PKG}" -v "${VERSION}" -k "${KREL}" -q --verbose || sudo dkms add -m "${PKG}" -v "${VERSION}" -q
-sudo dkms build  -m "${PKG}" -v "${VERSION}"
-sudo dkms install -m "${PKG}" -v "${VERSION}" --force
-
-echo "[+] Fertig: ${PKG}/${VERSION} installiert."
-echo "    Prüfen:  modinfo ${MODNAME} | head"
-echo "             lsmod | grep ${MODNAME} || sudo modprobe ${MODNAME}"
+echo "[*] Starte Installation aus ${SRC_DIR}"
+exec "${SRC_DIR}/scripts/install.sh" "$@"
