@@ -1,46 +1,65 @@
 #!/usr/bin/env bash
-# DKMS installer for cs8409-dkms (DKMS package) building module snd-hda-codec-cs8409
 set -euo pipefail
 
 PKG="cs8409-dkms"
-VER="$(cat "$(dirname "$0")/../VERSION")"
-SRC_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-USR_SRC="/usr/src/${PKG}-${VER}"
+MOD="snd-hda-codec-cs8409"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+KREL="$(uname -r)"
 
-if [[ $EUID -ne 0 ]]; then
-  echo "[ERROR] Please run as root (use sudo)." >&2
+need() { command -v "$1" >/dev/null 2>&1 || { echo "Fehlt: $1"; exit 2; }; }
+need dkms
+need make
+
+# Dependencies (Header)
+if ! dpkg -s "linux-headers-${KREL}" >/dev/null 2>&1; then
+  echo "[*] Installiere Kernel-Header für ${KREL} …"
+  sudo apt-get update -y
+  sudo apt-get install -y "linux-headers-${KREL}"
+fi
+
+# Version aus VERSION-Datei
+if [[ -f "${ROOT}/VERSION" ]]; then
+  VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
+else
+  echo "Fehler: VERSION-Datei fehlt."
   exit 1
 fi
 
-echo "==> Installing build prerequisites (dkms, headers, toolchain)"
-if command -v apt-get >/dev/null 2>&1; then
-  apt-get update -y
-  apt-get install -y dkms build-essential "linux-headers-$(uname -r)"
-elif command -v dnf >/dev/null 2>&1; then
-  dnf install -y dkms kernel-devel "kernel-devel-$(uname -r)" @development-tools || true
-elif command -v pacman >/dev/null 2>&1; then
-  pacman -Sy --noconfirm dkms base-devel linux-headers || true
-fi
+SRC_DST="/usr/src/${PKG}-${VERSION}"
 
-echo "==> Staging sources into ${USR_SRC}"
-rm -rf "${USR_SRC}"
-install -d "${USR_SRC}"
-# Copy dkms.conf, module tree, and VERSION
-install -m 0644 "${SRC_ROOT}/dkms.conf" "${USR_SRC}/"
-install -d "${USR_SRC}/module"
-cp -a "${SRC_ROOT}/module/." "${USR_SRC}/module/"
-install -m 0644 "${SRC_ROOT}/VERSION" "${USR_SRC}/"
+echo "[*] Bereite /usr/src vor: ${SRC_DST}"
+sudo rm -rf "${SRC_DST}"
+sudo mkdir -p "${SRC_DST}"
+# Wir kopieren nur, was DKMS zum Bauen braucht:
+sudo cp -a "${ROOT}/module" "${SRC_DST}/"
+sudo install -m 0644 /dev/stdin "${SRC_DST}/dkms.conf" <<EOF
+PACKAGE_NAME="${PKG}"
+PACKAGE_VERSION="${VERSION}"
 
-echo "==> Register with DKMS"
-dkms remove -m "${PKG}" -v "${VER}" --all >/dev/null 2>&1 || true
-dkms add -m "${PKG}" -v "${VER}"
+BUILT_MODULE_NAME[0]="${MOD}"
+# Die .ko entsteht durch 'make -C module' unter module/src/
+BUILT_MODULE_LOCATION[0]="module/src"
+DEST_MODULE_LOCATION[0]="/updates"
 
-echo "==> Build via DKMS"
-dkms build -m "${PKG}" -v "${VER}"
+MAKE[0]="make -C module KERNELRELEASE=\${kernelver}"
+CLEAN="make -C module clean"
 
-echo "==> Install the module into the running kernel"
-dkms install -m "${PKG}" -v "${VER}"
+AUTOINSTALL="yes"
+EOF
 
-echo "==> Done. You can now load the module:"
-echo "    sudo modprobe snd_hda_codec_cs8409"
-echo "    # check: dmesg | grep -i cs8409"
+echo "[*] Registriere DKMS ${PKG}/${VERSION}"
+# Sauberer Remove gleicher Version (idempotent)
+sudo dkms remove -m "${PKG}" -v "${VERSION}" --all >/dev/null 2>&1 || true
+
+sudo dkms add -m "${PKG}" -v "${VERSION}"
+sudo dkms build -m "${PKG}" -v "${VERSION}"
+sudo dkms install -m "${PKG}" -v "${VERSION}" --force
+
+echo "[*] Lade Modul (falls nicht automatisch) …"
+sudo modprobe "${MOD}" 2>/dev/null || true
+
+echo
+echo "[+] Fertig: ${PKG}/${VERSION} installiert."
+echo "    Prüfen:"
+echo "      modinfo ${MOD} | head"
+echo "      lsmod | grep ${MOD} || echo '(noch nicht geladen)'"
