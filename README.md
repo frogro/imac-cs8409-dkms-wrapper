@@ -18,7 +18,7 @@ On Debian/Ubuntu (recommended):
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y dkms build-essential "linux-headers-$(uname -r)"
+sudo apt-get install -y dkms build-essential wget "linux-headers-$(uname -r)"
 ```
 
 On Fedora:
