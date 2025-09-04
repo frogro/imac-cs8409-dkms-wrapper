@@ -1,0 +1,11 @@
+# Kbuild for snd-hda-codec-cs8409 (out-of-tree)
+obj-m += snd-hda-codec-cs8409.o
+
+snd-hda-codec-cs8409-y := patch_cirrus/patch_cs8409.o hda_generic.o hda_codec.o
+
+# Standard kernel module build rules
+all:
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+
+clean:
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
