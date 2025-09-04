@@ -1,42 +1,67 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DKMS Paket- und Modulnamen
 PKG="cs8409-dkms"
 MODNAME="snd-hda-codec-cs8409"
-
-# Repo-Root = Verzeichnis dieser Datei/../
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+KREL="$(uname -r)"
 
-# Voraussetzungen
-if ! command -v dkms >/dev/null 2>&1; then
-  echo "Fehler: dkms nicht gefunden. Bitte 'sudo apt install dkms build-essential linux-headers-$(uname -r)' ausführen." >&2
-  exit 1
+need() { command -v "$1" >/dev/null 2>&1 || { echo "Fehlt: $1"; exit 2; }; }
+
+need dkms
+need make
+
+if ! dpkg -s "linux-headers-${KREL}" >/dev/null 2>&1; then
+  echo "Installiere Kernel-Header für ${KREL}…"
+  sudo apt-get update -y
+  sudo apt-get install -y "linux-headers-${KREL}"
 fi
 
-# Version aus VERSION lesen (Fallback 0.0.0)
 VERSION="0.0.0"
-if [[ -f "${ROOT}/VERSION" ]]; then
-  VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
-fi
+[[ -f "${ROOT}/VERSION" ]] && VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
 
-echo "[*] Installiere DKMS-Paket ${PKG} v${VERSION}"
-
-# Aufräumen evtl. ältere Einträge der gleichen Version
+echo "[*] Registriere ${PKG}/${VERSION} bei DKMS aus ${ROOT}"
+# Sauberer Remove gleicher Version (falls vorher probiert)
 if dkms status | grep -q "^${PKG}/${VERSION}"; then
-  echo "[*] Entferne bereits registriertes ${PKG}/${VERSION}"
   sudo dkms remove -m "${PKG}" -v "${VERSION}" --all || true
 fi
 
-# Registrieren
-sudo dkms add -m "${PKG}" -v "${VERSION}" -k "$(uname -r)" -q --verbose || \
-sudo dkms add -m "${PKG}" -v "${VERSION}" -q
-
-# Bauen
-sudo dkms build -m "${PKG}" -v "${VERSION}"
-
-# Installieren
+# Add/Build/Install
+sudo dkms add    -m "${PKG}" -v "${VERSION}" -k "${KREL}" -q --verbose || sudo dkms add -m "${PKG}" -v "${VERSION}" -q
+sudo dkms build  -m "${PKG}" -v "${VERSION}"
 sudo dkms install -m "${PKG}" -v "${VERSION}" --force
 
-echo "[+] Fertig. Modul sollte nun unter /lib/modules/$(uname -r)/{updates,extra}/dkms/${MODNAME}.ko liegen."
-echo "    Test: 'modinfo ${MODNAME}' und 'lsmod | grep ${MODNAME}'"
+echo "[+] Fertig: ${PKG}/${VERSION} installiert."
+echo "    Prüfen:  modinfo ${MODNAME} | head"
+echo "             lsmod | grep ${MODNAME} || sudo modprobe ${MODNAME}"
+EOF
+chmod +x scripts/install.sh
+
+scripts/uninstall.sh (neu)
+
+cat > scripts/uninstall.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+PKG="cs8409-dkms"
+MODNAME="snd-hda-codec-cs8409"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+VERSION="0.0.0"
+[[ -f "${ROOT}/VERSION" ]] && VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
+
+echo "[*] Entferne ${PKG}/${VERSION} aus DKMS"
+sudo modprobe -r "${MODNAME}" 2>/dev/null || true
+sudo dkms remove -m "${PKG}" -v "${VERSION}" --all || true
+sudo depmod -a || true
+echo "[+] Entfernt."
+EOF
+chmod +x scripts/uninstall.sh
+
+Top-Level Wrapper (falls überschrieben/fehlt)
+install.sh
+
+cat > install.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec "$(cd "$(dirname "$0")" && pwd)/scripts/install.sh" "$@"
