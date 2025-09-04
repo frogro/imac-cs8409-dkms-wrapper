@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
-# Uninstall DKMS package cs8409-dkms
 set -euo pipefail
+
 PKG="cs8409-dkms"
-VER="$(cat "$(dirname "$0")/../VERSION")"
-if [[ $EUID -ne 0 ]]; then
-  echo "[ERROR] Please run as root (use sudo)." >&2
-  exit 1
+MOD="snd-hda-codec-cs8409"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "Fehlt: $1"; exit 2; }; }
+need dkms
+
+if [[ -f "${ROOT}/VERSION" ]]; then
+  VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
+else
+  # Fallback: entferne alle installierten Versionen
+  VERSION=""
 fi
 
-echo "==> Unloading module (if loaded)"
-modprobe -r snd_hda_codec_cs8409 2>/dev/null || true
+echo "[*] Entlade Modul (falls aktiv) …"
+sudo modprobe -r "${MOD}" 2>/dev/null || true
 
-echo "==> Removing DKMS build/install"
-dkms remove -m "${PKG}" -v "${VER}" --all || true
+if [[ -n "${VERSION}" ]]; then
+  echo "[*] Entferne ${PKG}/${VERSION} aus DKMS …"
+  sudo dkms remove -m "${PKG}" -v "${VERSION}" --all || true
+else
+  echo "[*] Entferne alle DKMS-Versionen von ${PKG} …"
+  while read -r line; do
+    ver="$(sed -E 's/^.*cs8409-dkms\/([^, ]+).*$/\1/' <<<"$line")"
+    [[ -n "${ver}" ]] && sudo dkms remove -m "${PKG}" -v "${ver}" --all || true
+  done < <(dkms status | grep -E '^cs8409-dkms/')
+fi
 
-echo "==> Removing sources from /usr/src/${PKG}-${VER}"
-rm -rf "/usr/src/${PKG}-${VER}"
-
-echo "==> Done."
+sudo depmod -a || true
+echo "[+] Entfernt."
