@@ -34,34 +34,3 @@ sudo dkms install -m "${PKG}" -v "${VERSION}" --force
 echo "[+] Fertig: ${PKG}/${VERSION} installiert."
 echo "    Prüfen:  modinfo ${MODNAME} | head"
 echo "             lsmod | grep ${MODNAME} || sudo modprobe ${MODNAME}"
-EOF
-chmod +x scripts/install.sh
-
-scripts/uninstall.sh (neu)
-
-cat > scripts/uninstall.sh <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-PKG="cs8409-dkms"
-MODNAME="snd-hda-codec-cs8409"
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-VERSION="0.0.0"
-[[ -f "${ROOT}/VERSION" ]] && VERSION="$(tr -d '\n\r' < "${ROOT}/VERSION")"
-
-echo "[*] Entferne ${PKG}/${VERSION} aus DKMS"
-sudo modprobe -r "${MODNAME}" 2>/dev/null || true
-sudo dkms remove -m "${PKG}" -v "${VERSION}" --all || true
-sudo depmod -a || true
-echo "[+] Entfernt."
-EOF
-chmod +x scripts/uninstall.sh
-
-Top-Level Wrapper (falls überschrieben/fehlt)
-install.sh
-
-cat > install.sh <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-exec "$(cd "$(dirname "$0")" && pwd)/scripts/install.sh" "$@"
