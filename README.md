@@ -37,6 +37,9 @@ sudo pacman -Sy --noconfirm dkms base-devel linux-headers
 
 ## 2) Quick install
 
+```bash
+wget https://github.com/frogro/cs8409-dkms-wrapper/blob/main/install.sh
+```
 From the repo root:
 
 ```bash
