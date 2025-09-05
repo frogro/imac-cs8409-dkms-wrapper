@@ -33,30 +33,17 @@ That keeps your local DKMS namespace short and conventional, while the repo name
 The installer will automatically check for and install missing tools using the detected package manager (`apt-get`, `dnf`, `zypper`, `pacman`).  
 
 **Required:**
+- `wget`
 - `git`, `dkms`, `rsync`, `sed`  
   *(auto-installed if a supported package manager is found)*  
 - **Kernel headers** for your current kernel  
   *(these are **not** installed automatically — you must install them manually!)*
 
-Examples:
-
-- **Debian/Ubuntu/Mint:**
-  ```bash
-  sudo apt-get update
-  sudo apt-get install -y linux-headers-$(uname -r)
-  ```
-- **Fedora/RHEL:**
-  ```bash
-  sudo dnf install -y kernel-devel kernel-headers
-  ```
-- **openSUSE:**
-  ```bash
-  sudo zypper install -y kernel-default-devel kernel-devel
-  ```
-- **Arch/Manjaro:**
-  ```bash
-  sudo pacman -S --needed linux-headers
-  ```
+     **Debian/Ubuntu/Mint:**
+     ```bash
+     sudo apt-get update
+     sudo apt-get install -y linux-headers-$(uname -r)
+     ```
 
 ---
 
