@@ -140,13 +140,13 @@ After installation:
 
 ```bash
 # Check module info
-modinfo snd_hda_codec_cs8409 | grep -E 'filename|version'
+sudo modinfo snd_hda_codec_cs8409 | grep -E 'filename|version'
 
 # Check DKMS status
-dkms status
+sudo dkms status
 
 # Inspect the build log
-sudo cat /var/lib/dkms/snd-hda-codec-cs8409/*/build/make.log
+sudo cat /var/lib/dkms/snd-hda-codec-cs8409/*/build/make.log | tail -n 100
 ```
 
 ---
