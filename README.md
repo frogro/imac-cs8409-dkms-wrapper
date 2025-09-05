@@ -144,9 +144,6 @@ sudo modinfo snd_hda_codec_cs8409 | grep -E 'filename|version'
 
 # Check DKMS status
 sudo dkms status
-
-# Inspect the build log
-sudo cat /var/lib/dkms/snd-hda-codec-cs8409/*/build/make.log | tail -n 100
 ```
 
 ---
