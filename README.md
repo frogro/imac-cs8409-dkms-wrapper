@@ -33,7 +33,7 @@ That keeps your local DKMS namespace short and conventional, while the repo name
 The installer will automatically check for and install missing tools using the detected package manager (`apt-get`, `dnf`, `zypper`, `pacman`).  
 
 **Required:**
-- `wget`
+- `wget`,`curl` 
 - `git`, `dkms`, `rsync`, `sed`  
   *(auto-installed if a supported package manager is found)*  
 - **Kernel headers** for your current kernel  
@@ -43,6 +43,7 @@ The installer will automatically check for and install missing tools using the d
      ```bash
      sudo apt-get update
      sudo apt-get install -y linux-headers-$(uname -r)
+     sudo apt instal wget curl
      ```
 
 ---
