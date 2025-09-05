@@ -43,7 +43,7 @@ The installer will automatically check for and install missing tools using the d
      ```bash
      sudo apt-get update
      sudo apt-get install -y linux-headers-$(uname -r)
-     sudo apt instal wget curl
+     sudo apt install wget curl
      ```
 
 ---
