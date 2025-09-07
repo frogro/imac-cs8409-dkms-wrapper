@@ -1,4 +1,4 @@
-# cs8409-dkms-wrapper
+# imac-cs8409-dkms-wrapper
 
 **DKMS package name:** `cs8409-dkms`  
 **Kernel module built/installed:** `snd-hda-codec-cs8409` (Cirrus Logic codec for Apple machines like the iMac 2019)
