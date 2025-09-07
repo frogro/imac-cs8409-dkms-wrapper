@@ -56,16 +56,16 @@ Two options are supported:
 
 ```bash
 # Install
-bash <(curl -fsSL https://raw.githubusercontent.com/frogro/cs8409-dkms-wrapper/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh)
 
 # or with wget:
-wget -qO- https://raw.githubusercontent.com/frogro/cs8409-dkms-wrapper/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
 ```
 
 ### 🔹 Git clone
 
 ```bash
-git clone https://github.com/frogro/cs8409-dkms-wrapper.git
+git clone https://github.com/frogro/imac-cs8409-dkms-wrapper.git
 cd cs8409-dkms-wrapper
 sudo ./install.sh
 ```
@@ -76,7 +76,7 @@ sudo ./install.sh
 
 ```bash
 # One-click
-bash <(curl -fsSL https://raw.githubusercontent.com/frogro/cs8409-dkms-wrapper/main/uninstall.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/uninstall.sh)
 
 # or via git clone
 cd cs8409-dkms-wrapper
