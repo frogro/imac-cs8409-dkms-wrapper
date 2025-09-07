@@ -77,6 +77,8 @@ sudo ./install.sh
 ```bash
 # One-click
 bash <(curl -fsSL https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/uninstall.sh)
+# or with wget:
+wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/uninstall.sh | bash
 
 # or via git clone
 cd cs8409-dkms-wrapper
