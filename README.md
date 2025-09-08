@@ -17,7 +17,7 @@ That keeps your local DKMS namespace short and conventional, while the repo name
   - [Table of Contents](#table-of-contents)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
-    - [One-click (wget / curl)](#-one-click-wget--curl)
+    - [One-click (wget)](#-one-click-wget)
     - [Git clone](#-git-clone)
   - [Uninstallation](#uninstallation)
   - [How it works](#how-it-works)
@@ -52,8 +52,8 @@ The installer will automatically check for and install missing tools using the d
 
 Two options are supported:
 
-### 🔹 One-click (wget / curl)
-
+### 🔹 One-click (wget)
+wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
 ```bash
 # Install
 wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
