@@ -56,9 +56,6 @@ Two options are supported:
 
 ```bash
 # Install
-bash <(curl -fsSL https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh)
-
-# or with wget:
 wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
 ```
 
