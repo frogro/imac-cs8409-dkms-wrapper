@@ -53,7 +53,6 @@ The installer will automatically check for and install missing tools using the d
 Two options are supported:
 
 ### 🔹 One-click (wget)
-wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
 ```bash
 # Install
 wget -qO- https://raw.githubusercontent.com/frogro/imac-cs8409-dkms-wrapper/main/install.sh | bash
